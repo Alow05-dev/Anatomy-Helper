@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#05070b">
+<title>Anatomy X — 3D Anatomy Lab</title>
+<style>
+:root{--bg:#05070b;--panel:rgba(10,15,23,.9);--line:#263244;--text:#f4f7fb;--muted:#95a1b2;--cyan:#55d6ff;--green:#63e6be;--red:#ff6b7a}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+#app{position:fixed;inset:0;background:radial-gradient(circle at 50% 35%,#18212d 0,#080b11 45%,#030407 100%)}canvas{display:block}
+.top{position:fixed;z-index:10;left:10px;right:10px;top:9px;display:flex;gap:8px;align-items:center;pointer-events:none}.brand,.search,.actions{pointer-events:auto;background:var(--panel);border:1px solid var(--line);backdrop-filter:blur(14px);border-radius:14px}.brand{padding:9px 12px}.brand b{letter-spacing:.08em}.brand small{display:block;color:var(--muted);font-size:9px;margin-top:2px}.search{display:flex;align-items:center;flex:1;max-width:500px;padding:0 10px}.search input{width:100%;border:0;outline:0;background:none;color:white;padding:10px}.actions{display:flex;gap:6px;padding:5px}.btn{border:1px solid var(--line);background:#101722;color:#dbe4ef;border-radius:10px;padding:8px 10px;cursor:pointer}.btn.active{border-color:var(--cyan);color:var(--cyan)}
+.left,.right{position:fixed;z-index:9;top:75px;bottom:12px;pointer-events:none}.left{left:10px;width:215px}.right{right:10px;width:285px}.panel{pointer-events:auto;background:var(--panel);border:1px solid var(--line);backdrop-filter:blur(14px);border-radius:15px;overflow:hidden;margin-bottom:9px;box-shadow:0 15px 45px #0009}.panel h3{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#aab5c5;padding:11px;margin:0;border-bottom:1px solid var(--line)}.grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:9px}.sliders{padding:9px}.slider{display:grid;grid-template-columns:55px 1fr;gap:8px;align-items:center;font-size:11px;color:#b8c2d0;margin:8px 0}.slider input{width:100%}.results{max-height:35vh;overflow:auto;padding:5px}.result{padding:8px;border-radius:8px;font-size:12px;cursor:pointer;color:#c7d0dc}.result:hover{background:#182332}.info{padding:13px;max-height:55vh;overflow:auto}.kicker{font-size:9px;text-transform:uppercase;letter-spacing:.15em;color:var(--cyan)}.title{font-size:21px;font-weight:800;margin:5px 0 8px}.desc{font-size:12px;color:#b6c0cd;line-height:1.5}.pill{display:inline-block;border:1px solid #334154;border-radius:99px;padding:3px 6px;font-size:9px;color:#9facc0;margin:6px 3px 0 0}
+.bottom{position:fixed;z-index:10;left:50%;bottom:9px;transform:translateX(-50%);display:flex;gap:5px;padding:6px;background:var(--panel);border:1px solid var(--line);border-radius:14px;backdrop-filter:blur(14px)}.toast{position:fixed;z-index:30;top:65px;left:50%;transform:translateX(-50%);padding:9px 12px;background:#101722;border:1px solid #354256;border-radius:10px;opacity:0;transition:.2s}.toast.show{opacity:1}
+.loader{position:fixed;z-index:50;inset:0;display:grid;place-items:center;background:#05070bf7}.loaderbox{width:min(390px,88vw);padding:24px;text-align:center;background:#0c1119;border:1px solid var(--line);border-radius:18px}.spin{width:36px;height:36px;margin:0 auto 12px;border:3px solid #2b3747;border-top-color:var(--cyan);border-radius:50%;animation:s 1s linear infinite}@keyframes s{to{transform:rotate(360deg)}}
+.quiz{position:fixed;z-index:40;inset:0;display:none;place-items:center;background:#02040ae8;backdrop-filter:blur(8px)}.quiz.open{display:grid}.quizbox{width:min(560px,92vw);padding:18px;background:#0b1018;border:1px solid var(--line);border-radius:18px}.answer{width:100%;text-align:left;padding:11px;margin:4px 0;background:#121a24;color:white;border:1px solid #2c3949;border-radius:10px}.answer.correct{border-color:var(--green);background:#123027}.answer.wrong{border-color:var(--red);background:#351c23}
+@media(max-width:800px){.top{flex-wrap:wrap}.brand small{display:none}.search{order:3;flex-basis:100%;max-width:none}.actions{margin-left:auto}.actions .desktop{display:none}.left{top:112px;width:185px}.right{left:8px;right:8px;width:auto;top:auto;bottom:60px;max-height:30vh}.info{max-height:30vh}.bottom{max-width:calc(100vw - 12px);overflow:auto}.bottom .btn{white-space:nowrap}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div class="top">
+  <div class="brand"><b>ANATOMY X</b><small>3D HUMAN ANATOMY LAB</small></div>
+  <div class="search">⌕ <input id="search" placeholder="Search structures…"></div>
+  <div class="actions">
+    <button class="btn active" id="bones">Bones</button><button class="btn active" id="muscles">Muscles</button>
+    <button class="btn desktop" id="xray">X-Ray</button><button class="btn" id="quizBtn">Quiz</button>
+  </div>
+</div>
+<div class="left">
+<section class="panel"><h3>3D Controls</h3><div class="grid">
+<button class="btn" data-view="front">Front</button><button class="btn" data-view="back">Back</button>
+<button class="btn" data-view="left">Left</button><button class="btn" data-view="right">Right</button>
+<button class="btn" id="reset">Reset</button><button class="btn" id="explode">Explode</button>
+</div></section>
+<section class="panel"><h3>Opacity</h3><div class="sliders">
+<label class="slider">Muscle<input id="mo" type="range" min="0" max="100" value="82"></label>
+<label class="slider">Bone<input id="bo" type="range" min="0" max="100" value="100"></label>
+</div></section>
+<section class="panel"><h3>Search Results</h3><div class="results" id="results"></div></section>
+</div>
+<div class="right"><section class="panel info" id="info">
+<div class="kicker">Interactive structure</div><div class="title">Select a structure</div>
+<div class="desc">Rotate with one finger. Pinch to zoom. Two-finger drag to pan. Tap a structure to identify it.</div>
+</section></div>
+<div class="bottom">
+<button class="btn active" id="study">Study</button><button class="btn" id="boneOnly">Bone Only</button>
+<button class="btn" id="muscleOnly">Muscle Only</button><button class="btn" id="outline">Outline</button>
+</div>
+<div class="toast" id="toast"></div>
+<div class="loader" id="loader"><div class="loaderbox"><div class="spin"></div><b>Loading your local 3D anatomy model…</b><div style="color:#94a0b1;font-size:12px;margin-top:7px">Using body.glb from this GitHub repository.</div></div></div>
+<div class="quiz" id="quiz"><div class="quizbox">
+<div class="kicker">Anatomy Quiz</div><h2>Identify the highlighted structure</h2><p id="q" style="color:#cbd4df">Loading…</p>
+<div id="answers"></div><div id="qr" style="color:#aeb8c6;min-height:22px;margin-top:8px"></div>
+<button class="btn" style="width:100%;margin-top:9px" id="next">Next Question</button><button class="btn" style="width:100%;margin-top:6px" id="close">Close</button>
+</div></div>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"}}</script>
+<script type="module">
+import * as THREE from 'three';
+import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
+import {DRACOLoader} from 'three/addons/loaders/DRACOLoader.js';
+
+const MODEL_URL='./body.glb';
+const scene=new THREE.Scene();scene.background=new THREE.Color(0x05070b);scene.fog=new THREE.FogExp2(0x05070b,.025);
+const camera=new THREE.PerspectiveCamera(40,innerWidth/innerHeight,.01,100);camera.position.set(0,1.2,3.2);
+const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(innerWidth,innerHeight);renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.15;document.querySelector('#app').appendChild(renderer.domElement);
+const controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.dampingFactor=.06;controls.enablePan=true;controls.minDistance=.35;controls.maxDistance=8;controls.target.set(0,1.15,0);
+scene.add(new THREE.HemisphereLight(0xcfe5ff,0x080a10,2.1));const key=new THREE.DirectionalLight(0xffffff,3.3);key.position.set(3,5,4);scene.add(key);const fill=new THREE.DirectionalLight(0x79bfff,1.5);fill.position.set(-4,2,2);scene.add(fill);const rim=new THREE.DirectionalLight(0xa98cff,1.3);rim.position.set(0,2,-4);scene.add(rim);
+const anatomy=new THREE.Group();scene.add(anatomy);const ray=new THREE.Raycaster(),pointer=new THREE.Vector2(),objects=[],original=new Map();let selected=null,exploded=false,xray=false;
+const infoText={femur:'The femur is the thigh bone and the longest bone in the human body. It transfers load between the hip and knee.',tibia:'The tibia is the principal weight-bearing bone of the lower leg and forms part of the knee and ankle.',fibula:'The fibula is the lateral lower-leg bone and contributes to ankle stability and muscle attachment.',humerus:'The humerus is the upper-arm bone, connecting the shoulder and elbow.',radius:'The radius is the forearm bone on the thumb side and participates in elbow and wrist motion.',ulna:'The ulna is the medial forearm bone and forms a major part of the elbow hinge.',scapula:'The scapula is the shoulder blade and a major attachment site for shoulder muscles.',clavicle:'The clavicle connects the sternum and scapula and acts as a strut for the shoulder.',sternum:'The sternum is the central chest bone and attaches to ribs and clavicles.',mandible:'The mandible is the lower jaw and the main freely movable bone of the skull.',patella:'The patella is a sesamoid bone within the extensor mechanism of the knee.',pelvis:'The pelvis connects the spine to the lower limbs and protects pelvic structures.',rib:'Ribs form the thoracic cage and protect the heart and lungs.',vertebra:'A vertebra is one of the bones of the spinal column and helps protect the spinal cord.'};
+function nameOf(o){return(o.userData.nameDetail||o.userData.name||o.name||o.parent?.name||'Anatomical structure').replace(/[_-]+/g,' ').replace(/\s+/g,' ').trim().replace(/\b\w/g,c=>c.toUpperCase())}
+function kindOf(o){const u=o.userData||{},s=(JSON.stringify(u)+' '+o.name+' '+(o.parent?.name||'')).toLowerCase();return u.type==='bone'||/\b(bone|skeleton|femur|tibia|fibula|humerus|radius|ulna|scapula|clavicle|sternum|rib|patella|mandible|maxilla|pelvis|sacrum|vertebra|talus|calcaneus|carpal|tarsal|phalanx)\b/.test(s)?'bones':'muscles'}
+function addModel(root){root.traverse(o=>{if(!o.isMesh)return;o.userData.kind=kindOf(o);o.userData.displayName=nameOf(o);original.set(o.uuid,o.position.clone());const mats=Array.isArray(o.material)?o.material:[o.material];mats.forEach(m=>{if(!m)return;m.transparent=true;m.depthWrite=true;if(o.userData.kind==='bones'){m.color?.set(0xd8c5a4);m.roughness=.5}else{m.color?.set(0x92313b);m.roughness=.65}});objects.push(o)})}
+function centerAndScale(root){const box=new THREE.Box3().setFromObject(root),size=box.getSize(new THREE.Vector3()),center=box.getCenter(new THREE.Vector3());root.position.sub(center);root.scale.setScalar(2.2/Math.max(size.x,size.y,size.z));root.position.y=1.15}
+function setOpacity(){objects.forEach(o=>{const a=o.userData.kind==='bones'?+document.querySelector('#bo').value/100:+document.querySelector('#mo').value/100;const mats=Array.isArray(o.material)?o.material:[o.material];mats.forEach(m=>{if(m){m.opacity=xray?Math.min(a,.28):a;m.transparent=m.opacity<.999;m.depthWrite=m.opacity>.55}})})}
+function setVisibility(){const b=document.querySelector('#bones').classList.contains('active'),m=document.querySelector('#muscles').classList.contains('active');objects.forEach(o=>o.visible=o.userData.kind==='bones'?b:m)}
+function glow(o,on){const mats=Array.isArray(o.material)?o.material:[o.material];mats.forEach(m=>{if(m?.emissive){m.emissive.set(on?0x55d6ff:0);m.emissiveIntensity=on?1.6:0}})}
+function esc(s){return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]))}
+function select(o){if(selected)glow(selected,false);selected=o;glow(o,true);const n=o.userData.displayName,k=o.userData.kind,key=Object.keys(infoText).find(x=>n.toLowerCase().includes(x));document.querySelector('#info').innerHTML='<div class="kicker">'+(k==='bones'?'Skeletal System':'Muscular System')+'</div><div class="title">'+esc(n)+'</div><div class="desc">'+esc(key?infoText[key]:'This structure is part of the human musculoskeletal anatomy. Select structures to study their location, relationships, and function.')+'</div><span class="pill">'+k+'</span><span class="pill">3D mesh</span>'}
+function doView(v){const p={front:[0,1.15,3.2],back:[0,1.15,-3.2],left:[-3.2,1.15,0],right:[3.2,1.15,0]}[v];camera.position.set(...p);controls.target.set(0,1.15,0)}
+function explode(on){exploded=on;objects.forEach(o=>{const base=original.get(o.uuid);if(!base)return;if(!on){o.position.copy(base);return}const w=new THREE.Vector3();o.getWorldPosition(w);o.position.copy(base).add(w.sub(new THREE.Vector3(0,1.15,0)).normalize().multiplyScalar(.08))})}
+function toast(s){const t=document.querySelector('#toast');t.textContent=s;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1800)}
+renderer.domElement.addEventListener('pointerdown',e=>{pointer.x=e.clientX/innerWidth*2-1;pointer.y=-(e.clientY/innerHeight)*2+1;ray.setFromCamera(pointer,camera);const hits=ray.intersectObjects(objects.filter(o=>o.visible),true);if(!hits.length)return;let o=hits[0].object;while(o&&!o.userData.displayName)o=o.parent;if(o)select(o)});
+document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>doView(b.dataset.view));document.querySelector('#reset').onclick=()=>{explode(false);doView('front');if(selected)glow(selected,false);selected=null};document.querySelector('#explode').onclick=e=>{exploded=!exploded;explode(exploded);e.currentTarget.classList.toggle('active',exploded)};
+document.querySelector('#bones').onclick=e=>{e.currentTarget.classList.toggle('active');setVisibility()};document.querySelector('#muscles').onclick=e=>{e.currentTarget.classList.toggle('active');setVisibility()};document.querySelector('#xray').onclick=e=>{e.currentTarget.classList.toggle('active');xray=e.currentTarget.classList.contains('active');setOpacity()};document.querySelector('#mo').oninput=setOpacity;document.querySelector('#bo').oninput=setOpacity;
+document.querySelector('#study').onclick=()=>{document.querySelector('#bones').classList.add('active');document.querySelector('#muscles').classList.add('active');setVisibility()};document.querySelector('#boneOnly').onclick=()=>{document.querySelector('#bones').classList.add('active');document.querySelector('#muscles').classList.remove('active');setVisibility()};document.querySelector('#muscleOnly').onclick=()=>{document.querySelector('#bones').classList.remove('active');document.querySelector('#muscles').classList.add('active');setVisibility()};document.querySelector('#outline').onclick=()=>toast('Tap a structure for its anatomical outline');
+document.querySelector('#search').oninput=e=>{const q=e.target.value.toLowerCase().trim(),box=document.querySelector('#results');box.innerHTML='';if(!q)return;objects.filter(o=>o.userData.displayName.toLowerCase().includes(q)).slice(0,40).forEach(o=>{const d=document.createElement('div');d.className='result';d.textContent=o.userData.displayName;d.onclick=()=>select(o);box.appendChild(d)})};
+function quizQuestion(){const pool=objects.filter(o=>o.userData.displayName.length>3);if(pool.length<4)return;const target=pool[Math.floor(Math.random()*pool.length)],choices=[target];while(choices.length<4){const x=pool[Math.floor(Math.random()*pool.length)];if(!choices.includes(x))choices.push(x)}document.querySelector('#q').textContent='Which structure is highlighted on the 3D model?';const answers=document.querySelector('#answers');answers.innerHTML='';document.querySelector('#qr').textContent='';if(selected)glow(selected,false);selected=target;glow(target,true);choices.sort(()=>Math.random()-.5).forEach(x=>{const b=document.createElement('button');b.className='answer';b.textContent=x.userData.displayName;b.onclick=()=>{if(b.dataset.done)return;b.dataset.done=1;const good=x===target;b.classList.add(good?'correct':'wrong');if(!good)[...answers.children].find(y=>y.textContent===target.userData.displayName)?.classList.add('correct');document.querySelector('#qr').textContent=good?'Correct.':'Correct answer: '+target.userData.displayName;select(target)}})}
+document.querySelector('#quizBtn').onclick=()=>{document.querySelector('#quiz').classList.add('open');quizQuestion()};document.querySelector('#next').onclick=quizQuestion;document.querySelector('#close').onclick=()=>document.querySelector('#quiz').classList.remove('open');
+async function boot(){try{const draco=new DRACOLoader();draco.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/libs/draco/');const gltfLoader=new GLTFLoader();gltfLoader.setDRACOLoader(draco);const gltf=await gltfLoader.loadAsync(MODEL_URL);anatomy.add(gltf.scene);centerAndScale(gltf.scene);addModel(gltf.scene);setOpacity();setVisibility();document.querySelector('#loader').style.display='none';toast('Your local body.glb loaded')}catch(err){console.error(err);document.querySelector('#loader').innerHTML='<div class="loaderbox"><b>body.glb could not load</b><div style="font-size:12px;color:#a5afbd;margin-top:8px">Make sure body.glb is beside index.html in the GitHub repository.</div><div style="font-size:11px;color:#7f8b9c;margin-top:8px">Browser error: '+esc(err?.message||String(err))+'</div><button class="btn" style="margin-top:12px" onclick="location.reload()">Reload</button></div>'}}
+addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,2))});
+(function animate(){requestAnimationFrame(animate);controls.update();renderer.render(scene,camera)})();boot();
+</script>
+</body>
+</html>
